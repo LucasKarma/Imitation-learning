@@ -1,11 +1,14 @@
+import argparse
 import robosuite as suite
 from robosuite import load_controller_config
 import numpy as np
 import robomimic.utils.file_utils as FileUtils
 import robomimic.utils.torch_utils as TorchUtils
 
-BC_CKPT  = "/Users/shenliuxu/robomimic_outputs/bc_lift/bc_lift_ph/20260410141544/models/model_epoch_2000.pth"
-IQL_CKPT = "/Users/shenliuxu/robomimic_outputs/iql_lift/iql_lift_ph/20260410151318/models/model_epoch_2000.pth"
+parser = argparse.ArgumentParser()
+parser.add_argument("--bc_ckpt", type=str, required=True, help="Path to BC checkpoint (.pth)")
+parser.add_argument("--iql_ckpt", type=str, required=True, help="Path to IQL checkpoint (.pth)")
+args = parser.parse_args()
 
 device = TorchUtils.get_torch_device(try_to_use_cuda=False)
 
@@ -55,8 +58,8 @@ scenarios = {
 }
 
 print("Loading policies...")
-bc_policy  = load_policy(BC_CKPT)
-iql_policy = load_policy(IQL_CKPT)
+bc_policy  = load_policy(args.bc_ckpt)
+iql_policy = load_policy(args.iql_ckpt)
 
 results = {}
 for name, seeds in scenarios.items():
