@@ -65,8 +65,10 @@ The dataset is not included in this repository due to its size. It can be downlo
 | Metric | BC | IQL |
 |---|---|---|
 | Success rate | 74% (37/50) | **80% (40/50)** |
-| Avg reward | not recorded | 13.26 |
+| Avg reward | 13.88 | 13.26 |
 | Training epochs | 2000 | 2000 |
+
+> *Note: BC avg reward was recorded in a separate evaluation run (50 rollouts, no fixed seed). Minor variance between runs is expected.*
 
 ### Experiment 2 — Generalization test (3 seed groups × 20 rollouts each)
 
