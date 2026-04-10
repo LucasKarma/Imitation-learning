@@ -1,6 +1,30 @@
-# P2 — Imitation Learning: BC vs IQL on Robotic Manipulation
+# Imitation Learning: BC vs IQL on Robotic Manipulation
 
-A comparative study of Behavior Cloning (BC) and Implicit Q-Learning (IQL) on the **Lift** task using [robosuite](https://robosuite.ai/) and [robomimic](https://robomimic.github.io/). Both algorithms are trained on identical expert demonstration data and evaluated across overall success rate, average reward, and cross-initialization generalization.
+**TL;DR:** Behavior Cloning (BC) and Implicit Q-Learning (IQL) are trained on identical expert demonstrations for the robosuite Lift task. IQL achieves higher overall success rate (80% vs 74%) and consistently higher reward under distribution shift, while BC is more precise within its training distribution. Full results and reproduction steps below.
+
+---
+
+## Quick Start
+
+```bash
+# 1. Setup
+conda create -n robosuite_env python=3.9 && conda activate robosuite_env
+pip install -r requirements.txt
+
+# 2. Download dataset (place in ./data/)
+#    https://robomimic.github.io/docs/datasets/robomimic_v0.1.html
+
+# 3. Train
+python -m robomimic.scripts.train --config configs/bc_lift.json
+python -m robomimic.scripts.train --config configs/iql_lift.json
+
+# 4. Evaluate (replace with your checkpoint paths)
+python scripts/bc_rollout.py --ckpt outputs/bc_lift/<run>/models/model_epoch_2000.pth
+python scripts/iql_rollout.py --ckpt outputs/iql_lift/<run>/models/model_epoch_2000.pth
+python scripts/generalization_test.py \
+    --bc_ckpt outputs/bc_lift/<run>/models/model_epoch_2000.pth \
+    --iql_ckpt outputs/iql_lift/<run>/models/model_epoch_2000.pth
+```
 
 ---
 
@@ -30,7 +54,7 @@ Both models are trained on the official robomimic **proficient-human (ph)** data
 | Observation dimension | 42 |
 | Action dimension | 7 (OSC_POSE) |
 
-The dataset is not included in this repository due to its size. It can be downloaded from the [robomimic dataset page](https://robomimic.github.io/docs/datasets/robomimic_v0.1.html).
+The dataset is not included in this repository due to its size. It can be downloaded from the [robomimic dataset page](https://robomimic.github.io/docs/datasets/robomimic_v0.1.html) and should be placed in `./data/`.
 
 ---
 
@@ -64,64 +88,65 @@ Three independent seed groups were used to evaluate both models under different 
 
 ---
 
-## Reproducing the experiments
+## Reproducing the Experiments
 
-**Environment setup**
+### Environment setup
 
 ```bash
 conda create -n robosuite_env python=3.9
 conda activate robosuite_env
-pip install robosuite robomimic "mujoco==3.2.0"
+pip install -r requirements.txt
 ```
 
-**Training**
+### Dataset
+
+Download the Lift proficient-human dataset from the [robomimic dataset page](https://robomimic.github.io/docs/datasets/robomimic_v0.1.html) and place it at `./data/low_dim_v141.hdf5`.
+
+### Training
 
 ```bash
-# BC
 python -m robomimic.scripts.train --config configs/bc_lift.json
-
-# IQL
 python -m robomimic.scripts.train --config configs/iql_lift.json
 ```
 
-Both configs have `rollout.enabled` set to `False` to avoid a `mujoco_py` dependency conflict. Evaluation is performed separately via the scripts below.
+Both configs have `rollout.enabled` set to `False` to avoid a `mujoco_py` dependency conflict on newer MuJoCo versions. Evaluation is performed separately via the scripts below.
 
-**Evaluation**
+### Evaluation
 
 ```bash
 # BC rollout (50 episodes)
-python scripts/bc_rollout.py
+python scripts/bc_rollout.py --ckpt <path_to_bc_checkpoint.pth>
 
 # IQL rollout (50 episodes)
-python scripts/iql_rollout.py
+python scripts/iql_rollout.py --ckpt <path_to_iql_checkpoint.pth>
 
 # Generalization test (3 seed groups × 20 episodes per model)
-python scripts/generalization_test.py
+python scripts/generalization_test.py \
+    --bc_ckpt <path_to_bc_checkpoint.pth> \
+    --iql_ckpt <path_to_iql_checkpoint.pth>
 ```
 
 Model checkpoints (`.pth` files) are not included due to file size. Training from the provided configs and dataset fully reproduces the reported results.
 
 ---
 
-## Repository structure
+## Repository Structure
 
 ```
-p2-imitation-learning/
+Imitation-learning/
 ├── README.md
+├── requirements.txt
 ├── .gitignore
 ├── configs/
 │   ├── bc_lift.json           # BC training config
 │   └── iql_lift.json          # IQL training config
 ├── scripts/
-│   ├── bc_rollout.py          # BC evaluation script (50 rollouts)
-│   ├── iql_rollout.py         # IQL evaluation script (50 rollouts)
-│   └── generalization_test.py # Cross-initialization generalization test
-├── results/
-│   ├── bc_vs_iql_generalization.png
-│   └── bc_vs_iql_summary_table.png
-└── logs/
-    ├── 工程复盘日志_P2_BC训练_4_10下午.md
-    └── 工程复盘日志_P2_BC_vs_IQL对比实验_4_10晚上.md
+│   ├── bc_rollout.py          # BC evaluation (--ckpt, --n_rollouts)
+│   ├── iql_rollout.py         # IQL evaluation (--ckpt, --n_rollouts)
+│   └── generalization_test.py # Cross-initialization test (--bc_ckpt, --iql_ckpt)
+└── results/
+    ├── bc_vs_iql_generalization.png
+    └── bc_vs_iql_summary_table.png
 ```
 
 ---
@@ -132,6 +157,6 @@ p2-imitation-learning/
 |---|---|
 | Platform | macOS, Apple Silicon (arm64) |
 | Python | 3.9.25 |
-| robosuite | latest |
+| robosuite | 1.4.1 |
 | robomimic | 0.3.0 |
 | MuJoCo | 3.2.0 |
