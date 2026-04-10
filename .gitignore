@@ -1,0 +1,31 @@
+# Model checkpoints — too large to track
+*.pth
+*.pt
+
+# Dataset files
+*.hdf5
+*.h5
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Conda / virtualenv
+.env
+.venv
+env/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Logs and outputs generated at runtime
+robomimic_outputs/
+tb/
