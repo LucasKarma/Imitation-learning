@@ -1,13 +1,17 @@
+import argparse
 import robosuite as suite
 from robosuite import load_controller_config
 import numpy as np
 import robomimic.utils.file_utils as FileUtils
 import robomimic.utils.torch_utils as TorchUtils
 
-CKPT = "/Users/shenliuxu/robomimic_outputs/bc_lift/bc_lift_ph/20260410141544/models/model_epoch_2000.pth"
+parser = argparse.ArgumentParser()
+parser.add_argument("--ckpt", type=str, required=True, help="Path to BC checkpoint (.pth)")
+parser.add_argument("--n_rollouts", type=int, default=50)
+args = parser.parse_args()
 
 device = TorchUtils.get_torch_device(try_to_use_cuda=False)
-policy, _ = FileUtils.policy_from_checkpoint(ckpt_path=CKPT, device=device, verbose=True)
+policy, _ = FileUtils.policy_from_checkpoint(ckpt_path=args.ckpt, device=device, verbose=True)
 
 controller_config = load_controller_config(default_controller="OSC_POSE")
 env = suite.make(
@@ -25,11 +29,10 @@ def process_obs(raw_obs):
         'robot0_gripper_qpos': raw_obs['robot0_gripper_qpos'],
     }
 
-n_rollouts = 50
 successes = 0
 rewards_all = []
 
-for i in range(n_rollouts):
+for i in range(args.n_rollouts):
     obs = env.reset()
     policy.start_episode()
     total_reward, success = 0, False
@@ -45,5 +48,5 @@ for i in range(n_rollouts):
     print(f"Rollout {i+1:02d}: success={success}, reward={total_reward:.2f}")
 
 print(f"\n=== BC Results ===")
-print(f"Success rate: {successes}/{n_rollouts} = {successes/n_rollouts*100:.1f}%")
+print(f"Success rate: {successes}/{args.n_rollouts} = {successes/args.n_rollouts*100:.1f}%")
 print(f"Avg reward:   {np.mean(rewards_all):.3f}")
