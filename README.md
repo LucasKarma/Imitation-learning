@@ -1,6 +1,6 @@
 # Imitation Learning: BC vs IQL on Robotic Manipulation
 
-**TL;DR:** Behavior Cloning (BC) and Implicit Q-Learning (IQL) are trained on identical expert demonstrations for the robosuite Lift task. Across 3 training seeds × 50 rollouts each, IQL achieves significantly higher success rate (88.0% ± 5.9% vs 76.0% ± 3.3%). A demo quantity ablation (20–200 demos) further shows IQL's advantage is largest under data scarcity, reaching +22pp at 50 demos — suggesting IQL extracts more value from limited demonstrations.
+**TL;DR:** Behavior Cloning (BC) and Implicit Q-Learning (IQL) are trained on identical expert demonstrations for the robosuite Lift task. Across 3 training seeds × 50 rollouts each, IQL achieves consistently higher success rate (88.0% ± 5.9% vs 76.0% ± 3.3%). A demo quantity ablation (20–200 demos) further shows IQL's advantage is largest under data scarcity, reaching +22pp at 50 demos — suggesting IQL extracts more value from limited demonstrations.
 
 ---
 
