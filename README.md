@@ -90,6 +90,8 @@ BC achieves slightly higher average reward (15.20 vs 13.62), indicating that whe
 
 To investigate how each algorithm responds to limited demonstration data, we trained BC and IQL on subsampled datasets of 20, 50, 100, and 200 demos (randomly selected with a fixed seed for reproducibility).
 
+> *Note: Each ablation run uses a single training seed (seed=1). Results here are not directly comparable to the multi-seed experiment above, which averages over 3 seeds.*
+
 | Demos | BC SR | IQL SR | BC Reward | IQL Reward |
 |---|---|---|---|---|
 | 20 | 38% | 44% | 32.94 | 25.70 |
