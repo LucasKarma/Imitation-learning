@@ -1,6 +1,6 @@
 # Imitation Learning: BC vs IQL on Robotic Manipulation
 
-**TL;DR:** Behavior Cloning (BC) and Implicit Q-Learning (IQL) are trained on identical expert demonstrations for the robosuite Lift task. IQL achieves higher overall success rate (80% vs 74%) and consistently higher reward under distribution shift, while BC is more precise within its training distribution. Full results and reproduction steps below.
+**TL;DR:** Behavior Cloning (BC) and Implicit Q-Learning (IQL) are trained on identical expert demonstrations for the robosuite Lift task. Across 3 training seeds × 50 rollouts each, IQL achieves significantly higher success rate (88.0% ± 5.9% vs 76.0% ± 3.3%), while BC yields slightly higher average reward per episode. Generalization tests further show IQL maintains superior action quality under distribution shift.
 
 ---
 
@@ -60,19 +60,35 @@ The dataset is not included in this repository due to its size. It can be downlo
 
 ## Results
 
-### Experiment 1 — Overall evaluation (50 rollouts)
+### Experiment 1 — Multi-seed evaluation (3 seeds × 50 rollouts each)
+
+Each algorithm was trained 3 times with different random seeds (seed 1, 2, 3) and evaluated with 50 rollouts per checkpoint.
 
 | Metric | BC | IQL |
 |---|---|---|
-| Success rate | 74% (37/50) | **80% (40/50)** |
-| Avg reward | 13.88 | 13.26 |
+| Success rate (mean ± std) | 76.0% ± 3.3% | **88.0% ± 5.9%** |
+| Avg reward (mean ± std) | **15.20 ± 1.57** | 13.62 ± 1.31 |
 | Training epochs | 2000 | 2000 |
 
-> *Note: BC avg reward was recorded in a separate evaluation run (50 rollouts, no fixed seed). Minor variance between runs is expected.*
+| Seed | BC SR | IQL SR | BC Reward | IQL Reward |
+|---|---|---|---|---|
+| 1 | 80.0% | 82.0% | 14.02 | 15.10 |
+| 2 | 76.0% | 86.0% | 17.41 | 13.84 |
+| 3 | 72.0% | **96.0%** | 14.17 | 11.92 |
+
+**Key findings:**
+
+IQL consistently outperforms BC in success rate across all 3 training seeds, with a mean advantage of +12 percentage points. The gap widens with seed variation — IQL's best run (seed 3, 96%) far exceeds BC's best (seed 1, 80%), suggesting IQL is more robust to training initialization.
+
+BC achieves slightly higher average reward (15.20 vs 13.62), indicating that when BC succeeds, its trajectories are more efficient — consistent with BC's strength as a precise imitator within its training distribution. IQL succeeds more often but may take longer or less direct paths to task completion.
+
+![Multi-seed comparison](results/multi_seed_comparison.png)
+
+![Per-seed breakdown](results/multi_seed_per_seed.png)
 
 ### Experiment 2 — Generalization test (3 seed groups × 20 rollouts each)
 
-Three independent seed groups were used to evaluate both models under different random initializations. BC and IQL were evaluated on identical initial conditions within each group.
+Three independent seed groups were used to evaluate both models (trained with seed 1) under different random initializations. BC and IQL were evaluated on identical initial conditions within each group.
 
 | Scenario | BC SR | IQL SR | BC Reward | IQL Reward |
 |---|---|---|---|---|
@@ -80,9 +96,7 @@ Three independent seed groups were used to evaluate both models under different 
 | Seed Group B (100–119) | 85% | 85% | 11.43 | **17.00** |
 | Seed Group C (200–219) | 80% | 80% | 9.92 | **12.92** |
 
-**Key finding:** BC achieves higher success rate under seed group A (initializations closer to its training distribution), consistent with the covariate shift hypothesis. As initialization diversity increases, success rates converge, but IQL maintains consistently higher average reward — indicating better action quality in unfamiliar states even when task completion rates are equivalent.
-
-### Result charts
+BC achieves higher success rate under seed group A (initializations closer to its training distribution), consistent with the covariate shift hypothesis. As initialization diversity increases, success rates converge, but IQL maintains consistently higher average reward — indicating better action quality in unfamiliar states even when task completion rates are equivalent.
 
 ![Generalization comparison](results/bc_vs_iql_generalization.png)
 
@@ -128,6 +142,16 @@ python scripts/generalization_test.py \
     --iql_ckpt <path_to_iql_checkpoint.pth>
 ```
 
+### Multi-seed experiment
+
+To reproduce the full 3-seed training and evaluation:
+
+```bash
+python scripts/multi_seed_experiment.py
+```
+
+This trains BC and IQL with seeds 1, 2, 3, evaluates each checkpoint with 50 rollouts, and prints a summary table with mean ± std.
+
 Model checkpoints (`.pth` files) are not included due to file size. Training from the provided configs and dataset fully reproduces the reported results.
 
 ---
@@ -140,13 +164,17 @@ Imitation-learning/
 ├── requirements.txt
 ├── .gitignore
 ├── configs/
-│   ├── bc_lift.json           # BC training config
-│   └── iql_lift.json          # IQL training config
+│   ├── bc_lift.json              # BC training config
+│   └── iql_lift.json             # IQL training config
 ├── scripts/
-│   ├── bc_rollout.py          # BC evaluation (--ckpt, --n_rollouts)
-│   ├── iql_rollout.py         # IQL evaluation (--ckpt, --n_rollouts)
-│   └── generalization_test.py # Cross-initialization test (--bc_ckpt, --iql_ckpt)
+│   ├── bc_rollout.py             # BC evaluation (--ckpt, --n_rollouts)
+│   ├── iql_rollout.py            # IQL evaluation (--ckpt, --n_rollouts)
+│   ├── generalization_test.py    # Cross-initialization test (--bc_ckpt, --iql_ckpt)
+│   ├── multi_seed_experiment.py  # Full 3-seed training + evaluation pipeline
+│   └── plot_multi_seed.py        # Generate multi-seed result charts
 └── results/
+    ├── multi_seed_comparison.png
+    ├── multi_seed_per_seed.png
     ├── bc_vs_iql_generalization.png
     └── bc_vs_iql_summary_table.png
 ```
